@@ -13,8 +13,10 @@ def init_cors(api: FastAPI) -> None:
         allow_headers=["*"],
     )
 
+
 def init_routers(api: FastAPI) -> None:
     api.include_router(media_router)
+
 
 def create_api() -> FastAPI:
     api = FastAPI(
@@ -27,7 +29,7 @@ def create_api() -> FastAPI:
 
     init_routers(api=api)
     init_cors(api=api)
-    
+
     return api
 
 
