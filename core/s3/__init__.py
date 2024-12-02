@@ -7,10 +7,16 @@ from core.config import S3_HOST
 
 
 class S3Manager:
-    def __init__(self, bucket_name: str, access_key_id: str, secret_access_key: str, endpoint_url: str):
+    def __init__(
+        self,
+        bucket_name: str,
+        access_key_id: str,
+        secret_access_key: str,
+        endpoint_url: str,
+    ):
         self.bucket_name = bucket_name
         self.s3_client = boto3.client(
-            's3',
+            "s3",
             endpoint_url=endpoint_url,
             aws_access_key_id=access_key_id,
             aws_secret_access_key=secret_access_key,
@@ -43,10 +49,12 @@ class S3Manager:
         """
         Generate presigned url with expiration time.
         """
-        response = self.s3_client.generate_presigned_post(Bucket=self.bucket_name,
-                                                          Key=key,
-                                                          Fields=None,
-                                                          Conditions=None,
-                                                          ExpiresIn=expiration)
+        self.s3_client.head_object(Bucket=self.bucket_name, Key=key)
 
-        return response['url']
+        response = self.s3_client.generate_presigned_url(
+            "get_object",
+            Params={"Bucket": self.bucket_name, "Key": key},
+            ExpiresIn=expiration,
+        )
+
+        return response
