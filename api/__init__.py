@@ -34,3 +34,8 @@ def create_api() -> FastAPI:
 
 
 api = create_api()
+
+
+@api.get("/")
+async def hello():
+    return {"message": "Hello World!"}
