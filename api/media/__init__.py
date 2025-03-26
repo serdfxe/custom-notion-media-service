@@ -59,7 +59,7 @@ async def get_media_file(
         )
     
     except Exception as e:
-        raise HTTPException(status_code=404, detail="File not found")
+        raise HTTPException(status_code=404, detail=f"File not found: {filename=} {x_user_id=} {e=}")
 
 
 @media_router.post(
