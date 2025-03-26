@@ -13,11 +13,11 @@ class S3Manager:
             aws_secret_access_key=secret_access_key,
         )
 
-    async def upload_file(self, file, key: str):
+    async def upload_file(self, file, key: str, **kwargs):
         """
         Upload file.
         """
-        self.s3_client.put_object(Body=await file.read(), Bucket=self.bucket_name, Key=key)
+        self.s3_client.put_object(Body=await file.read(), Bucket=self.bucket_name, Key=key, **kwargs)
 
     def delete_file(self, key: str):
         """
@@ -25,7 +25,7 @@ class S3Manager:
         """
         self.s3_client.delete_object(Bucket=self.bucket_name, Key=key)
 
-    def generate_presigned_url(self, key: str, expiration: int = 3600) -> Optional[str]:
+    def generate_presigned_url(self, key: str, expiration: int = 3600, **kwargs) -> Optional[str]:
         """
         Generate presigned url with expiration time.
         """
@@ -33,8 +33,8 @@ class S3Manager:
         
         response = self.s3_client.generate_presigned_url(
             'get_object',
-            Params={'Bucket': self.bucket_name, 'Key': key},
-            ExpiresIn=expiration
+            Params={'Bucket': self.bucket_name, 'Key': key, **kwargs},
+            ExpiresIn=expiration,
         )
 
         return response

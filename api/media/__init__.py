@@ -1,6 +1,7 @@
 from typing import Annotated
 from uuid import UUID, uuid4
 from fastapi import APIRouter, File, Header, Request, UploadFile, HTTPException
+from fastapi.responses import StreamingResponse 
 
 from .dto import FilenameResponseDTO, UrlResponseDTO
 
@@ -19,26 +20,46 @@ media_router = APIRouter(prefix="/media", tags=["media"])
 
 @media_router.get(
     "/{filename}",
-    response_model=UrlResponseDTO,
     responses={
-        200: {"description": "Success."},
+        200: {
+            "description": "Success.",
+            "content": {"*/*": {}}
+        },
         401: {"description": "Unauthorized."},
         404: {"description": "Not Found."},
     },
 )
-async def get_media_url_route(
-    filename: str, x_user_id: Annotated[str, Header()], request: Request
+async def get_media_file(
+    filename: str,
+    # x_user_id: Annotated[str, Header()]
 ):
     """
-    Get media URL. The operation returns the media URL which is associated with
-    user_id (is equal to X-User-Id in header) and file_id.
+    Get media file. Can be used as src in HTML tags like <img>, <video>, etc.
     """
-    # try:
-    media_url = s3_manager.generate_presigned_url(key=f"{x_user_id}/{filename}")
-    # except Exception:
-    #    raise HTTPException(status_code=404, detail="Not found")
-
-    return {"url": media_url}
+    try:
+        file_obj = s3_manager.s3_client.get_object(
+            Bucket=s3_manager.bucket_name,
+            Key=f"1480d296-093c-4975-9592-bbbc82449972/{filename}",
+        )
+        
+        content_type = "application/octet-stream"
+        if filename.lower().endswith(('.png', '.jpg', '.jpeg', '.gif')):
+            content_type = f"image/{filename.split('.')[-1].lower()}"
+        elif filename.lower().endswith('.mp4'):
+            content_type = "video/mp4"
+        elif filename.lower().endswith('.pdf'):
+            content_type = "application/pdf"
+        
+        return StreamingResponse(
+            file_obj['Body'].iter_chunks(),
+            media_type=content_type,
+            headers={
+                "Content-Disposition": f"inline; filename={filename}"
+            }
+        )
+    
+    except Exception as e:
+        raise HTTPException(status_code=404, detail="File not found")
 
 
 @media_router.post(
@@ -61,9 +82,11 @@ async def upload_media_route(
 
     # try:
 
-    filename = f"{str(uuid4())}-{file.filename}"
+    filename = f"{str(uuid4())}-{file.filename}"    
 
-    await s3_manager.upload_file(file=file, key=f"{x_user_id}/{filename}")
+    content_type = file.content_type or "application/octet-stream"
+
+    await s3_manager.upload_file(file=file, key=f"{x_user_id}/{filename}", ContentType=content_type)
     # except Exception:
     #    raise HTTPException(status_code=500, detail="Error on uploading the file")
 
