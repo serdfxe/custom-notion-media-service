@@ -31,7 +31,7 @@ media_router = APIRouter(prefix="/media", tags=["media"])
 )
 async def get_media_file(
     filename: str,
-    # x_user_id: Annotated[str, Header()]
+    x_user_id: Annotated[str, Header()]
 ):
     """
     Get media file. Can be used as src in HTML tags like <img>, <video>, etc.
@@ -39,7 +39,7 @@ async def get_media_file(
     try:
         file_obj = s3_manager.s3_client.get_object(
             Bucket=s3_manager.bucket_name,
-            Key=f"1480d296-093c-4975-9592-bbbc82449972/{filename}",
+            Key=f"{x_user_id}/{filename}",
         )
         
         content_type = "application/octet-stream"
